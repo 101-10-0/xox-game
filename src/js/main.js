@@ -28,56 +28,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const cell = event.target;
         const index = parseInt(cell.dataset.index);
         
-        if (!cell.textContent && !game.isAITurn) {  // Only allow clicks during human turn
+        if (!cell.getAttribute('data-content') && !game.isAITurn) {
             const result = game.makeMove(index);
+            cell.setAttribute('data-content', 'O');
             
-            if (result === true || result === 'win' || result === 'draw') {
-                cell.textContent = 'O';  // Explicitly set O for human moves
-                
-                if (result === 'win') {
-                    setTimeout(() => {
-                        const winner = game.currentPlayer;
-                        const winnerName = winner === 'O' ? 'Cat Bus' : 'Totoro';
-                        showModal(`${winnerName} wins the game! ✨`, winner);
-                        scoreboard.updateScore(winner);
-                    }, 100);
-                } else if (result === 'draw') {
-                    setTimeout(() => {
-                        showModal(null, 'draw');
-                        scoreboard.updateTies();
-                    }, 100);
-                } else {
-                    // AI's turn
-                    setTimeout(makeAIMove, 500);
-                }
+            if (result === 'win') {
+                setTimeout(() => {
+                    showModal(`Cat Bus wins the game! ✨`, 'O');
+                    scoreboard.updateScore('O');
+                }, 100);
+            } else if (result === 'draw') {
+                setTimeout(() => {
+                    showModal(null, 'draw');
+                    scoreboard.updateTies();
+                }, 100);
+            } else {
+                game.isAITurn = true;
+                setTimeout(makeAIMove, 500);
             }
         }
     }
 
     function makeAIMove() {
-        const currentBoard = [...cells].map(cell => cell.textContent || null);
+        const currentBoard = [...cells].map(cell => cell.getAttribute('data-content') || null);
         const bestMove = AI.getBestMove(currentBoard);
+        
         if (bestMove !== null) {
             const cell = cells[bestMove];
             const result = game.makeMove(bestMove);
+            cell.setAttribute('data-content', 'X');
             
-            if (result === true || result === 'win' || result === 'draw') {
-                cell.textContent = 'X';  // Explicitly set X for AI moves
-                
-                if (result === 'win') {
-                    setTimeout(() => {
-                        const winner = game.currentPlayer;
-                        const winnerName = winner === 'O' ? 'Cat Bus' : 'Totoro';
-                        showModal(`${winnerName} wins the game! ✨`, winner);
-                        scoreboard.updateScore(winner);
-                    }, 100);
-                } else if (result === 'draw') {
-                    setTimeout(() => {
-                        showModal(null, 'draw');
-                        scoreboard.updateTies();
-                    }, 100);
-                }
+            if (result === 'win') {
+                setTimeout(() => {
+                    showModal(`Totoro wins the game! ✨`, 'X');
+                    scoreboard.updateScore('X');
+                }, 100);
+            } else if (result === 'draw') {
+                setTimeout(() => {
+                    showModal(null, 'draw');
+                    scoreboard.updateTies();
+                }, 100);
             }
+            game.isAITurn = false;
         }
     }
 
@@ -89,7 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add event listener for the "Start New Game" button
     startGameBtn.addEventListener('click', () => {
         game.reset();
-        cells.forEach(cell => cell.textContent = '');
+        cells.forEach(cell => {
+            cell.setAttribute('data-content', '');
+        });
+        game.isAITurn = false;
     });
 
     // Add modal close handler
